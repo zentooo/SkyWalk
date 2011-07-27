@@ -1,0 +1,1 @@
+../../static/controller.js

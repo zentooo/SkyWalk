@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>これからのJavaScriptの話をしよう 〜ES5編〜</title>
+    <meta name="Description" content="" />
+    <meta name="Keywords"  content="" />
+    <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" type="text/css" media="screen,print" href="/static/style.css" />
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/static/server.js"></script>
+    <script type="text/javascript" src="/static/slide.js"></script>
+  </head>
+
+  <!-- Copyright os0x - http://jsdo.it/os0x -->
+  <!-- Licensed under MIT License - http://www.opensource.org/licenses/mit-license.php -->
+
+  <body>
+
+    <section>
+      <h2>これからのJavaScriptの話をしよう</h2>
+      <img width="700" src="http://userdisk.webry.biglobe.ne.jp/000/135/32/N000/000/004/128315274655816300591_sandel.jpg" alt="" />
+    </section>
+
+    <section>
+      <h2>これからのJavaScript</h2>
+      <ul>
+        <li class="h">ES5, ES Harmony</li>
+        <li class="h">Server Side JS (Node JS, RingoJS, etc...)</li>
+        <li class="h">LL for cross-device application (ngGame, Titanium, etc...)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>今回は</h2>
+        <p>ES5の話を主にします（途中から脱線）
+        <img src="http://cdn-ak.f.st-hatena.com/images/fotolife/s/shim0mura/20101005/20101005205747.png" alt="" />
+    </section>
+
+    <section>
+      <h2>そもそも</h2>
+      <p>なんでJavaScriptじゃなくてECMAScript?
+      <ul>
+      	<li class="h">標準の名前としてはECMAScriptが正しい</li>
+      	<li class="h">（当時の）JavaScript(NetScape)とJScript(IE)をまとめて標準化</li>
+      	<li class="h">各ブラウザのJS実装やASなどはその実装/方言とみなせる</li>
+      	<li class="h">MozillaのJavaScript versionとは直接は関係なし</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>ECMAScriptの(黒)歴史</h2>
+      <dl>
+        <dt>ES1</dt><dd class="h">1997/6</dd>
+        <dt>ES2</dt><dd class="h">1998/6</dd>
+        <dt>ES3</dt><dd class="h">1999/12 いわゆるJavaScript</dd>
+        <dt>ES4</dt><dd class="h">政治的な理由でオワコン</dd>
+        <dt>ES5</dt><dd class="h">2009/12 公開</dd>
+        <dt>ES Harmony</dt><dd class="h">そして別言語へ</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>現状認識</h2>
+      <ul>
+        <li class="h">いわゆるクロスブラウザなJavaScriptはES3準拠で書く</li>
+      	<li class="h">モダンなブラウザではES5 featureが動く</li>
+      	<li class="h">特にiPhone, AndroidではfeatureによるがES5が使える</li>
+      	<li class="h">FirefoxのみHENTAIの世界(let, generator, iteratorなど)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>ES5 features</h2>
+      <ul>
+        <li>Array Extras</li>
+        <li>Property Desctiptors</li>
+        <li>strict mode</li>
+        <li>Native JSON suport</li>
+        <li>getter and setter</li>
+        <li>Others (Function.prototype.bind, Array.isArray, etc...)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>各ブラウザのES5サポート</h2>
+      <a href="http://kangax.github.com/es5-compat-table/">ECMAScript 5 compatibility table</a>
+      <ul>
+      	<li class="h">Array Extras, JSONはだいたいのモダンブラウザで動く</li>
+      	<li class="h">Property Desctiptors周りはIE9, FF4, Chrome6, Safari5以降</li>
+      	<li class="h">strict modeと(本物の)getter/setterは...お察しください</li>
+      	<li class="h">iPhone, Androidは新しめのOSなら大体はOK</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>getter and setter</h2>
+      <ul>
+      	<li class="h">.による参照および代入で呼ばれるgetter, setter関数を定義</li>
+      	<li class="h">とはいいつつも実態は演算子オーバライドに近い</li>
+      	<li class="h">ES5で策定された実装と、先走り実装がある</li>
+      	<li class="h">実際にはProperty Desctiptorsの概念に含まれる(後述)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>getter and setter in action (ES5)</h2>
+      <pre>
+var hidek = {
+  _age: 40,
+  get age() {     // hidek.ageでこの関数が呼ばれる
+    return this._age;
+  },
+  set age(v) {    // hidek.age = 40でこの関数が呼ばれる
+    return this._age = v;
+  },
+  get next() {
+    return this._age + 1;
+  }
+};
+
+console.log(hidek.next); // 41
+      </pre>
+    </section>
+
+    <section>
+      <h2>getter and setter in action (先走り)</h2>
+      <pre>
+var hidek = { _age: 40 };
+
+hidek.__defineGetter__("age", function() {
+  return this._age;
+});
+hidek.__defineSetter__("age", function(age) {
+  this._age = age;
+});
+
+hidek.__defineGetter__("nextage", function() {
+  return this._age + 1;
+});
+
+console.log(hidek.next); // 41
+      </pre>
+    </section>
+
+    <section>
+      <h2>Property Desctiptors</h2>
+      <a href="http://d.hatena.ne.jp/Constellation/20101205/1291564928">ES5, Property Descriptor解説 - 枕を欹てて聴く</a>
+      <ul>
+      	<li class="h">オブジェクトの保持する値にメタ属性をつける</li>
+      	<li class="h">既存のプロパティと同じ文法で違うものをセットしているのがミソ</li>
+      	<li class="h">メタ属性は自由につけられるかと思いきや、そうでもない</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Property Descriptorsの例</h2>
+      <pre>
+var yukio = {};
+
+// almost same as yukio.age = 31
+Object.defineProperty(yukio, "age", {
+  writable : false, // this property is not writable
+  value : 31
+});
+
+console.log(yukio.age); // 31
+yukio.age = 18; // Error!
+      </pre>
+    </section>
+
+    <section>
+      <h2>Property Descriptors</h2>
+      <ul>
+        <dl>
+          <dt>Enumerable</dt><dd>for-inで列挙されるかどうか</dd>
+          <dt>Configurable</dt><dd>メタ属性を変更、削除できるかどうか</dd>
+          <dt>Writable</dt><dd>実際の値を変更できるかどうか</dd>
+          <dt>Value</dt><dd>実際の値</dd>
+          <dt>Get</dt><dd>Getter</dd>
+          <dt>Set</dt><dd>Setter</dd>
+        </dl>
+      </ul>
+    </section>
+
+    <section>
+      <h2>DataDescriptor</h2>
+      <pre>
+var obj = {};
+
+//   Enumerable: absent
+//   Configurable: absent
+//   Writable: false,
+//   Value: "data"
+// の DataDescriptor (Value / Writableのどちらかが存在するので)
+
+Object.defineProperty(obj, "data", {
+  writable : false,
+  value : "data"
+});
+      </pre>
+    </section>
+
+    <section>
+      <h2>AccessorDescriptor</h2>
+      <pre>
+var obj = {};
+
+//   Enumerable: false
+//   Configurable: false
+//   Get: get,
+//   Set: absent
+// の AccessorDescriptor (Get / Setのどちらかが存在するので)
+
+Object.defineProperty(obj, "getter", {
+  get: function() {
+    return "OK";
+  }
+});
+      </pre>
+    </section>
+
+    <section>
+      <h2>GenericDescriptor</h2>
+      <pre>
+var obj = {};
+
+//   Enumerable: true
+//   Configurable: true
+// の GenericDescriptor (DataDescriptorでもAccessorDescriptorでもないので)
+
+Object.defineProperty(obj, "getter", {
+  enumerable: true,
+  configurable: true
+});
+      </pre>
+    </section>
+
+    <section>
+      <h2>Array Extras</h2>
+      <ul>
+      	<li class="h">forEachとかmapとかfilterとか</li>
+      	<li class="h">引数に取った関数を配列の各要素(+a)に適用して結果を得る高階関数</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Array Extras in action</h2>
+      <pre>
+var ary1 = [1, 2, 3, 4, 5], ary2;
+
+// "1 2 3 4 5"
+ary1.forEach(function(item) {
+  print(item);
+});
+
+// ary2 = [2, 3, 4, 5 ,6]
+ary2 = ary1.map(function(item) {
+  return item + 1;
+});
+
+// ary3 = [1, 3, 5]
+ary3 = ary1.filter(function(item) {
+  return item % 2 === 1;
+});
+      </pre>
+    </section>
+
+    <section>
+      <h2>Performance of Array Extras</h2>
+      <ul>
+      	<li class="h">関数コールのコストが割と高いので、云々</li>
+      	<li class="h">ベンチマークを取らずにパフォーマンスとかないわー(by nekokak)</li>
+      	<li class="h">今回は<a href="http://benchmarkjs.com/">Benchmark.js</a>を使います</li>
+      	<li class="h">登録された関数を1secの間ループし、実行できた回数を平均</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Benchmark of for loop and forEach</h2>
+        <a href="http://db.tt/WdbB2qx">http://db.tt/WdbB2qx</a>
+        <dl>
+          <dt>Firefox 4.0.1</dt><dd>for: 4,641,125 ops/sec, forEach: 974,700 ops/sec</dd>
+          <dt>Chrome 11.0.696.71</dt><dd>for: 27,608,446 ops/sec, forEach: 2,914,328 ops/sec</dd>
+          <dt>iOS 4.2.1</dt><dd>for: 175,426 ops/sec, forEach: 54,015 ops/sec</dd>
+          <dt>Android </dt><dd>for: 1,322,458 ops/sec, forEach: 292,093 ops/sec</dd>
+        </dl>
+    </section>
+
+    <section>
+      <h2>for loop on V8</h2>
+<pre>
+--- Raw source ---
+var ary = [1, 2, 3, 4, 5];
+
+for ( var i = 0, j = ary.length; i &lt; j; i++ ) {
+  print(ary[i]);
+}
+--- Code ---
+kind = FUNCTION
+Instructions (size = 388)
+
+0x4da800     0  55             push ebp
+0x4da801     1  89e5           mov ebp,esp
+0x4da803     3  56             push esi
+0x4da804     4  57             push edi
+0x4da805     5  6849404a00     push 0x4a4049                 ;; object: 0x4a4049 <undefined>
+0x4da80a    10  56             push esi
+0x4da80b    11  6815906600     push 0x669015                 ;; object: 0x669015 <FixedArray[6]>
+0x4da810    16  6a00           push 0x0
+0x4da812    18  6a00           push 0x0
+0x4da814    20  b804000000     mov eax,0x4
+0x4da819    25  bbd0de2500     mov ebx,0x25ded0
+0x4da81e    30  e85d98feff     call 0x4c4080                 ;; debug: statement 0
+                                                             ;; code: STUB, CEntry, minor: 0
+0x4da823    35  3b25c0048000   cmp esp,[0x8004c0]
+0x4da829    41  7305           jnc 48  (0x4da830)
+0x4da82b    43  e8109dfeff     call 0x4c4540                 ;; code: STUB, StackCheck, minor: 0
+0x4da830    48  68b1084b00     push 0x4b08b1                 ;; object: 0x4b08b1 <String[3]: ary>
+0x4da835    53  6a00           push 0x0
+0x4da837    55  8b5df8         mov ebx,[ebp+0xf8]
+0x4da83a    58  ff731b         push [ebx+0x1b]
+0x4da83d    61  6a02           push 0x2
+0x4da83f    63  68f98f6600     push 0x668ff9                 ;; object: 0x668ff9 <FixedArray[5]>
+0x4da844    68  e837d4feff     call 0x4c7c80                 ;; code: STUB, FastCloneShallowArray, minor: 1
+0x4da849    73  50             push eax
+0x4da84a    74  b803000000     mov eax,0x3
+0x4da84f    79  bb80bb2500     mov ebx,0x25bb80
+0x4da854    84  e82798feff     call 0x4c4080                 ;; code: STUB, CEntry, minor: 0
+0x4da859    89  68d1ac4a00     push 0x4aacd1                 ;; object: 0x4aacd1 <String[1]: i>
+0x4da85e    94  6a00           push 0x0
+0x4da860    96  6a00           push 0x0
+0x4da862    98  b803000000     mov eax,0x3
+0x4da867   103  bb80bb2500     mov ebx,0x25bb80
+0x4da86c   108  e80f98feff     call 0x4c4080                 ;; code: STUB, CEntry, minor: 0
+0x4da871   113  68e1ac4a00     push 0x4aace1                 ;; object: 0x4aace1 <String[1]: j>
+0x4da876   118  6a00           push 0x0
+0x4da878   120  8b4617         mov eax,[esi+0x17]
+0x4da87b   123  b9b1084b00     mov ecx,0x4b08b1              ;; object: 0x4b08b1 <String[3]: ary>
+0x4da880   128  e8bbf6feff     call LoadIC_Initialize  (0x4c9f40)    ;; code: contextual, LOAD_IC, UNINITIALIZED
+0x4da885   133  b911714a00     mov ecx,0x4a7111              ;; object: 0x4a7111 <String[6]: length>
+0x4da88a   138  e8b1f6feff     call LoadIC_Initialize  (0x4c9f40)    ;; debug: position 52
+                                                             ;; code: LOAD_IC, UNINITIALIZED (id = 37)
+0x4da88f   143  50             push eax
+0x4da890   144  b803000000     mov eax,0x3
+0x4da895   149  bb80bb2500     mov ebx,0x25bb80
+0x4da89a   154  e8e197feff     call 0x4c4080                 ;; code: STUB, CEntry, minor: 0
+0x4da89f   159  e981000000     jmp 293  (0x4da925)
+0x4da8a4   164  ff7617         push [esi+0x17]
+0x4da8a7   167  8b4617         mov eax,[esi+0x17]
+0x4da8aa   170  b9b1084b00     mov ecx,0x4b08b1              ;; object: 0x4b08b1 <String[3]: ary>
+0x4da8af   175  e88cf6feff     call LoadIC_Initialize  (0x4c9f40)    ;; debug: statement 78
+                                                             ;; code: contextual, LOAD_IC, UNINITIALIZED
+0x4da8b4   180  50             push eax
+0x4da8b5   181  8b4617         mov eax,[esi+0x17]
+0x4da8b8   184  b9d1ac4a00     mov ecx,0x4aacd1              ;; object: 0x4aacd1 <String[1]: i>
+0x4da8bd   189  e87ef6feff     call LoadIC_Initialize  (0x4c9f40)    ;; code: contextual, LOAD_IC, UNINITIALIZED
+0x4da8c2   194  5a             pop edx
+0x4da8c3   195  e8b850ffff     call KeyedLoadIC_Initialize  (0x4cf980)    ;; debug: position 87
+                                                             ;; code: KEYED_LOAD_IC, UNINITIALIZED (id = 62)
+0x4da8c8   200  50             push eax
+0x4da8c9   201  b9b5044b00     mov ecx,0x4b04b5              ;; object: 0x4b04b5 <String[5]: print>
+0x4da8ce   206  e84dd9feff     call 0x4c8220                 ;; debug: statement 78
+                                                             ;; code: contextual, CALL_IC, UNINITIALIZED, in_loop, argc = 1
+0x4da8d3   211  8b75fc         mov esi,[ebp+0xfc]
+0x4da8d6   214  8945f4         mov [ebp+0xf4],eax
+0x4da8d9   217  8b4617         mov eax,[esi+0x17]
+0x4da8dc   220  b9d1ac4a00     mov ecx,0x4aacd1              ;; object: 0x4aacd1 <String[1]: i>
+0x4da8e1   225  e85af6feff     call LoadIC_Initialize  (0x4c9f40)    ;; debug: statement 28
+                                                             ;; debug: position 69
+                                                             ;; code: contextual, LOAD_IC, UNINITIALIZED
+0x4da8e6   230  a801           test al,0x1
+0x4da8e8   232  7405           jz 239  (0x4da8ef)
+0x4da8ea   234  e871d0feff     call 0x4c7960                 ;; code: STUB, ToNumber, minor: 0
+0x4da8ef   239  83c002         add eax,0x2
+0x4da8f2   242  7004           jo 248  (0x4da8f8)
+0x4da8f4   244  a801           test al,0x1
+0x4da8f6   246  7211           jc 265  (0x4da909)
+0x4da8f8   248  83e802         sub eax,0x2
+0x4da8fb   251  89c2           mov edx,eax
+0x4da8fd   253  b802000000     mov eax,0x2
+0x4da902   258  e839e3ffff     call 0x4d8c40                 ;; code: BINARY_OP_IC, UNINITIALIZED (id = 54)
+0x4da907   263  a811           test al,0x11
+0x4da909   265  b9d1ac4a00     mov ecx,0x4aacd1              ;; object: 0x4aacd1 <String[1]: i>
+0x4da90e   270  8b5617         mov edx,[esi+0x17]
+0x4da911   273  e8eafefeff     call StoreIC_Initialize  (0x4ca800)    ;; code: contextual, STORE_IC, UNINITIALIZED
+0x4da916   278  3b25c0048000   cmp esp,[0x8004c0]
+0x4da91c   284  7307           jnc 293  (0x4da925)
+0x4da91e   286  e81d9cfeff     call 0x4c4540                 ;; code: STUB, StackCheck, minor: 0
+0x4da923   291  a801           test al,0x1
+0x4da925   293  8b4617         mov eax,[esi+0x17]
+0x4da928   296  b9d1ac4a00     mov ecx,0x4aacd1              ;; object: 0x4aacd1 <String[1]: i>
+0x4da92d   301  e80ef6feff     call LoadIC_Initialize  (0x4c9f40)    ;; debug: position 63
+                                                             ;; code: contextual, LOAD_IC, UNINITIALIZED
+0x4da932   306  50             push eax
+0x4da933   307  8b4617         mov eax,[esi+0x17]
+0x4da936   310  b9e1ac4a00     mov ecx,0x4aace1              ;; object: 0x4aace1 <String[1]: j>
+0x4da93b   315  e800f6feff     call LoadIC_Initialize  (0x4c9f40)    ;; code: contextual, LOAD_IC, UNINITIALIZED
+0x4da940   320  5a             pop edx
+0x4da941   321  8bca           mov ecx,edx
+0x4da943   323  0bc8           or ecx,eax
+0x4da945   325  f6c101         test_b cl,0x1
+0x4da948   328  730d           jnc 343  (0x4da957)
+0x4da94a   330  3bd0           cmp edx,eax
+0x4da94c   332  0f8c52ffffff   jl 164  (0x4da8a4)
+0x4da952   338  e90f000000     jmp 358  (0x4da966)
+0x4da957   343  e864b3feff     call 0x4c5cc0                 ;; code: COMPARE_IC, UNINITIALIZED (id = 50)
+0x4da95c   348  a814           test al,0x14
+0x4da95e   350  85c0           test eax,eax
+0x4da960   352  0f8c3effffff   jl 164  (0x4da8a4)
+0x4da966   358  8b45f4         mov eax,[ebp+0xf4]
+0x4da969   361  89ec           mov esp,ebp                   ;; debug: position 94
+                                                             ;; js return
+0x4da96b   363  5d             pop ebp
+0x4da96c   364  c20400         ret 0x4
+0x4da96f   367  b849404a00     mov eax,0x4a4049              ;; object: 0x4a4049 <undefined>
+0x4da974   372  ebf3           jmp 361  (0x4da969)
+0x4da976   374  90             nop
+0x4da977   375  90             nop
+
+Stack checks (size = 1)
+ast_id  pc_offset
+    45        291
+
+RelocInfo (size = 88)
+0x4da806  embedded object  (0x4a4049 <undefined>)
+0x4da80c  embedded object  (0x669015 <FixedArray[6]>)
+0x4da81e  statement position  (0)
+0x4da81f  code target (STUB)  (0x4c4080)
+0x4da82c  code target (STUB)  (0x4c4540)
+0x4da831  embedded object  (0x4b08b1 <String[3]: ary>)
+0x4da840  embedded object  (0x668ff9 <FixedArray[5]>)
+0x4da845  code target (STUB)  (0x4c7c80)
+0x4da855  code target (STUB)  (0x4c4080)
+0x4da85a  embedded object  (0x4aacd1 <String[1]: i>)
+0x4da86d  code target (STUB)  (0x4c4080)
+0x4da872  embedded object  (0x4aace1 <String[1]: j>)
+0x4da87c  embedded object  (0x4b08b1 <String[3]: ary>)
+0x4da881  code target (context) (LOAD_IC)  (0x4c9f40)
+0x4da886  embedded object  (0x4a7111 <String[6]: length>)
+0x4da88a  position  (52)
+0x4da88b  code target with id (LOAD_IC)  (0x4c9f40) (id=37)
+0x4da89b  code target (STUB)  (0x4c4080)
+0x4da8ab  embedded object  (0x4b08b1 <String[3]: ary>)
+0x4da8af  statement position  (78)
+0x4da8b0  code target (context) (LOAD_IC)  (0x4c9f40)
+0x4da8b9  embedded object  (0x4aacd1 <String[1]: i>)
+0x4da8be  code target (context) (LOAD_IC)  (0x4c9f40)
+0x4da8c3  position  (87)
+0x4da8c4  code target with id (KEYED_LOAD_IC)  (0x4cf980) (id=62)
+0x4da8ca  embedded object  (0x4b04b5 <String[5]: print>)
+0x4da8ce  statement position  (78)
+0x4da8cf  code target (context) (CALL_IC)  (0x4c8220)
+0x4da8dd  embedded object  (0x4aacd1 <String[1]: i>)
+0x4da8e1  statement position  (28)
+0x4da8e1  position  (69)
+0x4da8e2  code target (context) (LOAD_IC)  (0x4c9f40)
+0x4da8eb  code target (STUB)  (0x4c7960)
+0x4da903  code target with id (BINARY_OP_IC)  (0x4d8c40) (id=54)
+0x4da90a  embedded object  (0x4aacd1 <String[1]: i>)
+0x4da912  code target (context) (STORE_IC)  (0x4ca800)
+0x4da91f  code target (STUB)  (0x4c4540)
+0x4da929  embedded object  (0x4aacd1 <String[1]: i>)
+0x4da92d  position  (63)
+0x4da92e  code target (context) (LOAD_IC)  (0x4c9f40)
+0x4da937  embedded object  (0x4aace1 <String[1]: j>)
+0x4da93c  code target (context) (LOAD_IC)  (0x4c9f40)
+0x4da958  code target with id (COMPARE_IC)  (0x4c5cc0) (id=50)
+0x4da969  position  (94)
+0x4da969  js return
+0x4da970  embedded object  (0x4a4049 <undefined>)
+
+1
+2
+3
+4
+5
+</pre>
+    </section>
+
+    <section>
+      <h2>forEach on v8</h2>
+      <a href="forEach.html">forEach on v8</a>
+    </section>
+
+    <section>
+      <h2>正直どうか、というと</h2>
+      <ul>
+        <li class="h">実際問題として、ループの実行効率よりまずは他のことを気にすべき</li>
+      	<li class="h">例えばDOM操作</li>
+      	<li class="h">例えばUI更新への処理の明け渡し</li>
+      	<li class="h">もちろんアプリケーションによります</li>
+      	<li class="h">ngCoreだと...?</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>JavaScriptあるある with sleep sort</h2>
+      出力されるのは何でしょう?<br />
+      <br />
+      <pre>
+var ary = [5, 3, 1, 4, 2];
+
+for ( var i = 0; j = ary.length; i &lt; j; i++ ) {
+  setTimeout(function() {
+    console.log(ary[i]);
+  }, ary[i] * 1000);
+}
+
+<p class="h">
+A. undefined undefined undefined undefined undefined
+</p>
+      </pre>
+    </section>
+
+    <section>
+      <h2>Array extras: The Good Parts</h2>
+      勝手に関数スコープが作られることには、良い面もある
+      <br />
+      <br />
+      <pre>
+var ary = [5, 3, 1, 4, 2];
+
+ary.forEach(function(item) { // function scope!
+  setTimeout(function(item) {
+    console.log(item);
+  }, item * 1000);
+});
+
+// 1 2 3 4 5
+      </pre>
+    </section>
+
+    <section>
+      <h2>Function.protoype.bind</h2>
+      <a href="http://d.hatena.ne.jp/Constellation/20110113/1294846327">Function.prototype.bindは何がいいのか - 枕を欹てて聴く</a>
+      <ul>
+        <li class="h">要はメソッドのレシーバ(this)変更機能 + カリー化機能が合わさった関数</li>
+        <li class="h">コンストラクタをbindするとprototypeをよしなにしてくれるとか何とか</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Function.protoype.bind in action</h2>
+      <pre>
+      function test(a, b) {
+          print(a, b);
+      }
+
+      var bound = test.bind(null, "test");
+      bound("test2");  // print("test", "test2");
+      </pre>
+    </section>
+
+    <section>
+      <h2>そして伝説へ... (ECMAScript Harmony)</h2>
+      <a href="http://wiki.ecmascript.org/doku.php?id=harmony:proposals">harmony:proposals [ES Wiki]</a>
+      <img src="http://blog-imgs-47.fc2.com/u/n/d/undergroundsokuhou/il_misawa2.gif" alt="" />
+    </section>
+
+    <section>
+      <h2>文献等</h2>
+      <ul>
+        <li><a href="http://www.amazon.co.jp/JavaScript-第5版-David-Flanagan/dp/4873113296">JavaScript 第5版</a></li>
+        <li><a href="http://gihyo.jp/dev/serial/01/crossbrowser-javascript">連載：これでできる！ クロスブラウザJavaScript入門｜gihyo.jp … 技術評論社</a></li>
+        <li><a href="http://www.amazon.co.jp/Pro-Javascript-Techniques-John-Resig/dp/1590597273/ref=sr_1_1?ie=UTF8&qid=1306430102&sr=1-1-catcorr">Pro JavaScript Techniques</a></li>
+        <li><a href="http://www.amazon.co.jp/JavaScriptパターン-―優れたアプリケーションのための作法-Stoyan-Stefanov/dp/4873114888/ref=pd_sim_fb_4">JavaScriptパターン<a/></li>
+        <li><a href="http://www.amazon.co.jp/ハイパフォーマンスJavaScript-Nicholas-C-Zakas/dp/487311490X/ref=pd_sim_b_1">ハイパフォーマンスJavaScript</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>終</h2>
+    </section>
+
+    <footer>
+      <span id="time"></span>
+      <span id="page"></span>
+    </footer>
+
+  </body>
+</html>
