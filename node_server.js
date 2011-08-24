@@ -9,7 +9,7 @@ function handle(req, res) {
   var url = URL.parse(req.url),
       path = url.pathname;
 
-  if ( /^\/static/.test(path) || path.test(/\.html$/) ) {
+  if ( /^\/static/.test(path) || /\.html$/.test(path) ) {
     serveStatic(req, res, path);
   }
 }

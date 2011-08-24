@@ -9,8 +9,7 @@ function handle(req, res) {
   var url = URL.parse(req.url),
       path = url.pathname;
 
-  console.log(path);
-  if ( /^\/static/.test(path) || path === "/slide.html" || path === "/controller.html" ) {
+  if ( /^\/static/.test(path) || /\.html$/.test(path) ) {
     serveStatic(req, res, path);
   }
 }
@@ -32,7 +31,6 @@ var clients = [];
 
 
 io.sockets.on('connection', function(socket) {
-  console.log("connected");
   clients.push(socket);
 
   socket.on('message', function(data) {
